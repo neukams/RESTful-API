@@ -11,6 +11,7 @@
     "dependencies": {
         "@google-cloud/datastore": "^6.0.0",
         "body-parser": "^1.20.0",
-        "express": "^4.16.4"
+        "express": "^4.16.4",
+        "node-json2html": "^2.2.2"
     }
 }

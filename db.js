@@ -2,16 +2,11 @@
     This file handles all db interactions
 */
 
-const projectId = 'a4-intermediate-rest-api';
+const projectId = 'assignment-5-advanced-rest';
 const {Datastore} = require('@google-cloud/datastore');
 const { entity } = require('@google-cloud/datastore/build/src/entity');
 const datastore = new Datastore({projectId:projectId});
 const BOAT = 'Boats';
-const LOAD = 'Loads';
-const NEWBOATPROPERTIES = ["name", "type", "length"];
-const NEWLOADPROPERTIES = ["volume", "item", "creation_date"];
-
-const validate = require('./validation');
 const utils = require('./utils');
 
 
@@ -33,29 +28,27 @@ function fromDatastoreArr(arr) {
     BOATS
 *******************************/
 
-async function createBoat(reqBody) {
-    console.log('createBoat()');
-    if (!validate.keys(reqBody, NEWBOATPROPERTIES)) {
-        return {};
-    }
+async function createBoat(boat) {
+    console.log('db.js -> createBoat()');
 
-    var boat = utils.makeBoatFromBody(reqBody);
     const key = datastore.key(BOAT);
 
     try {
         await datastore.save({"key": key, "data": boat});
+        boat.id = Number(key.id);
     } catch (err) {
         utils.logErr(err);
         return {};
     }
+
+    console.log(key);
+    console.log(boat);
     
-    boat.id = Number(key.id);
     return boat;
 }
 
 async function getBoat(id) {
-    console.log('getBoat(id)');
-    console.log('id='+id);
+    console.log('getBoat(' + id + ')');
     var boat;
     const key = datastore.key([BOAT, Number(id)]);
     const query = datastore.createQuery(BOAT);
@@ -69,22 +62,6 @@ async function getBoat(id) {
     
     return fromDatastore(boat[0]);
 }
-
-/*async function getBoatWithLoad(load_id) {
-    
-    try {
-        var load = await getLoad(load_id);
-    } catch (err) {
-        utils.logErr(err);
-        return {};
-    }
-
-    if (load.carrier === null) {
-        return {};
-    }
-
-    return await getBoat(load.carrier.id);
-}*/
 
 async function getBoats(cursor) {
     console.log('getBoats()');
@@ -105,9 +82,7 @@ async function getBoats(cursor) {
 // removes id or self properties if found
 // assumes the resource is valid otherwise
 async function updateBoat(boat) {
-    console.log('updateBoat(boat)');
-    console.log('boat');
-    console.log(boat);
+    console.log('updateBoat()');
 
     const transaction = datastore.transaction();
     const key = datastore.key([BOAT, Number(boat.id)]);
@@ -132,163 +107,6 @@ async function updateBoat(boat) {
     }
 
     return true;
-}
-
-/*******************************
-    LOADS
-*******************************/
-
-async function createLoad(reqBody) {
-    console.log('createLoad(reqBody)');
-    if (!validate.keys(reqBody, NEWLOADPROPERTIES)) {
-        return {};
-    }
-
-    var load = utils.makeLoadFromBody(reqBody);
-    const key = datastore.key(LOAD);
-
-    try {
-        await datastore.save({"key": key, "data": load});
-    } catch (err) {
-        utils.logErr(err);
-        return {};
-    }
-    
-    load.id = Number(key.id);
-    return load;
-}
-
-async function getLoad(id) {
-    console.log('getLoad(id)');
-    console.log('id=' + id);
-    var load;
-    const key = datastore.key([LOAD, Number(id)]);
-    console.log('load key = ');
-    console.log(key);
-    const query = datastore.createQuery(LOAD);
-    query.filter('__key__', key);
-    load = await datastore.runQuery(query);
-    load = load[0];
-
-    if (utils.isEmpty(load)) {
-        return {};
-    }
-    
-    return fromDatastore(load[0]);
-}
-
-async function getLoads(cursor) {
-    console.log('getLoads(cursor)');
-    var loads;
-    const query = datastore.createQuery(LOAD).limit(3);
-    if (cursor) {
-        console.log('cursor found');
-        query.start(cursor);
-    }
-    loads = await datastore.runQuery(query);
-    console.log('get loads with cursor');
-    console.log(loads);
-    fromDatastoreArr(loads[0])
-    return loads;
-}
-
-// assumes both boat and load exist
-async function assignLoadToBoat(boat, load, carrier, load_mini) {
-    console.log('assignLoadToBoat(boat, load)');
-
-    const transaction = datastore.transaction();
-    const load_key = datastore.key([LOAD, Number(load.id)]);
-    const boat_key = datastore.key([BOAT, Number(boat.id)]);
-
-    load.carrier = carrier;
-    boat.loads.push(load_mini);
-    delete boat.id;
-    delete load.id;
-
-    console.log('Assigned load to boat (not yet saved)');
-    console.log('Boat');
-    console.log(boat);
-    console.log('Carrier');
-    console.log(carrier);
-    console.log('Load');
-    console.log(load);
-    console.log('Load Mini');
-    console.log(load_mini);
-
-    try {
-        await transaction.run();
-        await transaction.save({"key": load_key, "data": load}); // a save should update this load since it already exists.
-        await transaction.save({"key": boat_key, "data": boat}); // a save should ..
-        await transaction.commit();
-        console.log('saved');
-    } catch (err) {
-        await transaction.rollback();
-        utils.logErr(err);
-        return false;
-    }
-
-    return true;
-}
-
-// updates a Load
-// removes id or self properties if found
-// assumes the resource is valid otherwise
-async function updateLoad(load) {
-    console.log('updateLoad(load)');
-
-    const transaction = datastore.transaction();
-    const key = datastore.key([LOAD, Number(load.id)]);
-
-    try {
-        delete load.id;
-        delete load.self;
-    } catch {
-        // do nothing, load.self attribute does not exist, which is what we want
-    }
-    
-
-    console.log('Updating Load (not yet saved)');
-    console.log('Load');
-    console.log(load);
-    
-    try {
-        await transaction.run();
-        await transaction.save({"key": key, "data": load}); // a save should ..
-        await transaction.commit();
-        console.log('saved');
-    } catch (err) {
-        await transaction.rollback();
-        utils.logErr(err);
-        console.log('not saved');
-        return false;
-    }
-
-    return true;
-}
-
-// return an array of all Loads in a given Boat
-async function getLoadsFromBoat(boat, req) {
-    console.log('db.getLoadsFromBoat(boat, req)');
-    console.log('boat');
-    console.log(boat);
-
-    var loads = [];
-
-    console.log(boat.loads);
-    for (i=0; i<boat.loads.length; i++) {
-
-        console.log('load_mini = ' + JSON.stringify(boat.loads[i]));
-        let load = await getLoad(boat.loads[i].id);
-        load.self = utils.url(req, ['/loads/', boat.loads[i].id]);
-        loads.push(JSON.parse(JSON.stringify(load)));
-        console.log('pushed load');
-        console.log(load);
-    }
-
-    console.log('loads array should contain all loads on boat ' + boat.id);
-    console.log(loads);
-
-    return loads;
 }
 
 /*******************************
@@ -320,14 +138,6 @@ module.exports = {
     createBoat,
     getBoat,
     getBoats,
-    createLoad,
-    getLoad,
-    getLoads,
-    assignLoadToBoat,
     updateBoat,
-    updateLoad,
-    getLoadsFromBoat,
-    deleteResource,
-    BOAT,
-    LOAD
+    deleteResource
 };

@@ -1,4 +1,8 @@
-// Utility functions
+/*
+
+Utility functions
+
+*/
 
 // builds a url
 function url(req, urlAdditions) {
@@ -16,8 +20,14 @@ function selfUrlResourceId(req, urlAdditions, boats) {
     }
 }
 
-function makeBoatFromBody(reqBody) {
-    return {"name": reqBody.name, "type": reqBody.type, "length": reqBody.length, "loads": []};
+function newJsonObject(someJSON, keys) {
+    var newJSON = {}
+    for (let key of keys) {
+        if (someJSON.hasOwnProperty(key)) {
+            newJSON[key] = someJSON[key];
+        }
+    }
+    return newJSON;
 }
 
 function logErr(err) {
@@ -30,19 +40,10 @@ function isEmpty(obj) {
     var arrayConstructor = [].constructor;
     var objectConstructor = ({}).constructor;
 
-    if (obj == undefined) {
-        return true;
-    }
-
-    if (obj == null) {
-        return true;
-    }
-
-    if (obj === {}) {
-        return true;
-    }
-
-    if (obj === []) {
+    if (obj == undefined ||
+        obj == null      ||
+        obj === {}       ||
+        obj === []          ) {
         return true;
     }
 
@@ -64,11 +65,32 @@ function printMany(print, numberOfTimes) {
     }
 }
 
+// return true if the JSON object contains all keys, false otherwise
+function contains_keys(someJson, keys) {
+    for (let key of keys) {
+        if (!someJson.hasOwnProperty(key)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function value_in_array(value, someArray) {
+    for (i=0; i<someArray.length; i++) {
+        if (value === someArray[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 module.exports = {
-    url, 
-    makeBoatFromBody, 
+    url,
     logErr,
     isEmpty,
     selfUrlResourceId,
-    printMany
+    printMany,
+    contains_keys,
+    newJsonObject,
+    value_in_array
 };

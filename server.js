@@ -5,6 +5,7 @@ const utils = require('./utils');
 const db = require('./db');
 const { Datastore } = require('@google-cloud/datastore');
 const router = express.Router();
+const req_handler = require('./request_handler');
 
 app.enable('trust proxy');
 app.use(bodyParser.json());
@@ -14,15 +15,31 @@ app.use(bodyParser.json());
 *******************************/
 
 router.post('/boats', async function(req, res) {
-    console.log('\n\nPOST /boats');
-    var boat = await db.createBoat(req.body);
-    if (utils.isEmpty(boat)) {
-        res.status(400).send({"Error": "The request object is missing at least one of the required attributes"});
-    } else {
-        boat.self = utils.url(req, ["/boats/", boat.id]);
-        res.status(201).send(boat);
-    }
+    console.log('POST /boats');
+    return await req_handler.post_boat(req, res);
 });
+
+router.get('/boats/:id', async function(req, res) {
+    console.log('GET /boats/:id');
+    return await req_handler.get_boat(req, res);
+});
+
+router.patch('/boats/:id', async function(req, res) {
+    console.log('PATCH /boats/:id');
+    return await req_handler.patch_boat(req, res);
+});
+
+router.put('/boats/:id', async function(req, res) {
+    console.log('PUT /boats/:id');
+    return await req_handler.put_boat(req, res);
+});
+
+router.delete('/boats/:id', async function(req, res) {
+    console.log('DELETE /boats/:id');
+    return await req_handler.delete_boat(req, res);
+});
+
+/*
 
 router.get('/boats/:id', async function(req, res) {
     console.log('\n\nGET /boats/:id');
@@ -106,7 +123,7 @@ router.delete('/boats/:id', async function(req, res) {
 
     res.status(204).send();
 });
-
+*/
 
 app.use(router);
 
