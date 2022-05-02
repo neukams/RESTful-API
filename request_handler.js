@@ -23,21 +23,30 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
  */
  async function post_boat(req, res) {
 
-    // valid header?
-    if(req.get(CONTENTTYPE) !== APPJSON) {
-        res.status(400).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
+    // valid Content-Type?
+    if (req.get(CONTENTTYPE) !== APPJSON) {
+        res.status(415).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
         return;
     }
 
-    // valid header?
+    // valid Accept?
     if (req.get(ACCEPT) !== APPJSON) {
-        res.status(400).send({"Error": "The allowed values for request header " + ACCEPT + " are " + [APPJSON]})
+        res.status(406).send({"Error": "The allowed values for request header " + ACCEPT + " are " + [APPJSON]})
         return;
     }
 
     // required Boat attributes?
     if (!utils.contains_keys(req.body, NEW_BOAT_ATTRIBUTES)) {
         res.status(400).send({"Error": "The request object is missing at least one of the required attributes"});
+        return;
+    }
+
+    // boat name unique?
+    var results = await db.getBoatByAttribute('name', '=', req.body.name);
+    console.log('Duplicate boat name on POST?');
+    console.log(results);
+    if (!utils.isEmpty(results)) {
+        res.status(403).send({"Error": "This boat name is already taken"});
         return;
     }
 
@@ -62,16 +71,16 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
  */
  async function get_boat(req, res) {
 
-    // valid Content-Type header value?
-    if(req.get(CONTENTTYPE) !== APPJSON || req.get(CONTENTTYPE) !== 'application/json; charset=utf-8') {
+    /*// valid Content-Type header value?
+    if(!utils.value_in_array(req.get(CONTENTTYPE), [APPJSON, 'application/json; charset=utf-8'])) {
         console.log(req.get(CONTENTTYPE));
-        res.status(400).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
+        res.status(415).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
         return;
-    }
+    }*/
 
     // valid Accept header value?
     if (!utils.value_in_array(req.get(ACCEPT), [APPJSON, TXTHTML])) {
-        res.status(400).send({"Error": "The allowed values for request header " + ACCEPT + " are " + [APPJSON, TXTHTML].join(', ')});
+        res.status(406).send({"Error": "The allowed values for request header " + ACCEPT + " are " + [APPJSON, TXTHTML].join(', ')});
         return;
     }
 
@@ -116,14 +125,23 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
 
     // valid Content-Type header value?
     if(req.get(CONTENTTYPE) !== APPJSON) {
-        res.status(400).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
+        res.status(415).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
         return;
     }
 
     // valid Accept header value?
     if (!utils.value_in_array(req.get(ACCEPT), [APPJSON, TXTHTML])) {
-        res.status(400).send({"Error": "The allowed values for request header " + ACCEPT + " are " + [APPJSON, TXTHTML].join(', ')});
+        res.status(406).send({"Error": "The allowed values for request header " + ACCEPT + " are " + [APPJSON, TXTHTML].join(', ')});
         return;
+    }
+
+    // boat name unique?
+    if (req.body.name) {
+        var results = await db.getBoatByAttribute('name', '=', req.body.name);
+        if (!utils.isEmpty(results)) {
+            res.status(403).send({"Error": "This boat name is already taken"});
+            return
+        }
     }
 
     // get Boat with id
@@ -171,13 +189,13 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
     // valid Content-Type header value?
     if(req.get(CONTENTTYPE) !== APPJSON) {
         //res.status(400).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
-        res.status(400).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
+        res.status(415).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
         return;
     }
 
     // valid Accept header value?
     if (!utils.value_in_array(req.get(ACCEPT), [APPJSON, TXTHTML])) {
-        res.status(400).send({"Error": "The allowed values for request header " + ACCEPT + " are " + APPJSON});
+        res.status(406).send({"Error": "The allowed values for request header " + ACCEPT + " are " + APPJSON});
         return;
     }
 
@@ -185,6 +203,15 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
     if (!utils.contains_keys(req.body, NEW_BOAT_ATTRIBUTES)) {
         res.status(400).send({"Error": "Missing required resource attributes"});
         return;
+    }
+
+    // boat name unique?
+    var results = await db.getBoatByAttribute('name', '=', req.body.name);
+    console.log('Duplicate boat names from PUT request');
+    console.log(results);
+    if (!utils.isEmpty(results)) {
+        res.status(403).send({"Error": "This boat name is already taken"});
+        return
     }
 
     // get Boat with id
@@ -230,16 +257,16 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
  */
  async function delete_boat(req, res) {
 
-    // valid Content-Type header value?
+    /*// valid Content-Type header value?
     if(req.get(CONTENTTYPE) !== APPJSON) {
         //res.status(400).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
-        res.status(400).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
+        res.status(415).send({"Error": "The allowed values for request header " + CONTENTTYPE + " are " + [APPJSON]})
         return;
-    }
+    }*/
 
     // valid Accept header value?
     if (!utils.value_in_array(req.get(ACCEPT), [APPJSON, TXTHTML])) {
-        res.status(400).send({"Error": "The allowed values for request header " + ACCEPT + " are " + APPJSON});
+        res.status(406).send({"Error": "The allowed values for request header " + ACCEPT + " are " + APPJSON});
         return;
     }
 
