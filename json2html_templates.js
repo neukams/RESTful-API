@@ -4,6 +4,7 @@ let boat = {'<>':'ul','html':[
     {'<>':'li','html':'${type}'},
     {'<>':'li','html':'${name}'},
     {'<>':'li','html':'${length}'},
+    {'<>':'li','html':'${self}'},
 ]};
 
 module.exports = {
