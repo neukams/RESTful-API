@@ -4,6 +4,94 @@ Utility functions
 
 */
 
+function validBoatDataProvided(boat) {
+    if (boat.name) {
+        if (!validName(boat)) {
+            return false
+        }
+    }
+
+    if (boat.type) {
+        if (!validType(boat)) {
+            return false
+        }
+    }
+
+    if (boat.length) {
+        if (!validLength(boat)) {
+            return false
+        }
+    }
+
+    return true;
+}
+
+function validBoatData(boat) {
+    console.log('validBoatData()');
+    
+    console.log(isNaN(Number(boat.name)));
+        console.log(boat.name.length <= 40);
+        console.log(typeof boat.name == 'string');
+        console.log(isNaN(Number(boat.type)));
+        console.log(boat.type.length <= 50);
+        console.log(typeof boat.type == 'string');
+        console.log(typeof boat.length == 'number');
+        console.log(isPositiveInteger(String(boat.length)));
+        console.log(boat.length <= 1500);
+
+
+    if (validName(boat) && validType(boat) && validLength(boat)) {
+        return true;
+    }
+    return false;
+}
+
+function validName(boat) {
+    if (isNaN(Number(boat.name)) &&
+    boat.name.length <= 40 &&
+    typeof boat.name == 'string') {
+        return true;
+    }
+    return false;
+}
+
+function validType(boat) {
+    if (isNaN(Number(boat.type)) &&
+    boat.type.length <= 50 &&
+    typeof boat.type == 'string') {
+        return true;
+    }
+    return false;
+}
+
+function validLength(boat) {
+    if (typeof boat.length == 'number' &&
+    isPositiveInteger(String(boat.length)) &&
+    boat.length <= 1500) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * SOURCES CITED: https://bobbyhadz.com/blog/javascript-check-if-string-is-positive-integer
+ * 
+ * This function was provide as an example to determine if a string is a positive integer.
+ */
+function isPositiveInteger(str) {
+    if (typeof str !== 'string') {
+      return false;
+    }
+  
+    const num = Number(str);
+  
+    if (Number.isInteger(num) && num > 0) {
+      return true;
+    }
+  
+    return false;
+  }
+
 // builds a url
 function url(req, urlAdditions) {
     var base_url = req.protocol + "://" + req.get('host');
@@ -92,5 +180,10 @@ module.exports = {
     printMany,
     contains_keys,
     newJsonObject,
-    value_in_array
+    value_in_array,
+    validBoatData,
+    validName,
+    validType,
+    validLength,
+    validBoatDataProvided
 };

@@ -45,12 +45,12 @@ router.delete('/boats/:id', async function(req, res) {
 
 router.put('/boats', async function(req, res) {
     console.log('PUT /boats');
-    res.status(405).set('Allow', 'POST').send("Not Accepted");
+    res.status(405).set('Allow', 'POST, GET').send({"Error": "Method Not Accepted"});
 });
 
 router.delete('/boats', async function(req, res) {
     console.log('DELETE /boats');
-    res.status(405).set('Allow', 'POST').send("Not Accepted");
+    res.status(405).set('Allow', 'POST, GET').send({"Error": "Method Not Accepted"});
 });
 
 

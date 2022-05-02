@@ -41,6 +41,12 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
         return;
     }
 
+    // all boat attributes are good?
+    if (!utils.validBoatData(req.body)) {
+        res.status(400).send({"Error": "The provided attribute(s) do not conform to the boat data model, either data types or data length."})
+        return;
+    }
+
     // boat name unique?
     var results = await db.getBoatByAttribute('name', '=', req.body.name);
     console.log('Duplicate boat name on POST?');
@@ -159,6 +165,18 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
         boat[key] = boat_updates[key];
     }
 
+    // boat has at least one attribute to update?
+    if (utils.isEmpty(boat_updates)) {
+        res.status(400).send({"Error": "At least one valid boat attribute must be provided"});
+        return;
+    }
+
+    // provided boat attributes are good?
+    if (!utils.validBoatDataProvided(boat_updates)) {
+        res.status(400).send({"Error": "The provided attribute(s) do not conform to the boat data model, either data types or data length."})
+        return;
+    }
+
     // save to DB
     var saved = await db.updateBoat(boat);
     if (!saved) {
@@ -202,6 +220,12 @@ const ALL_BOAT_ATTRIBUTES = ['name', 'length', 'type', 'id'];
     // boat resource contains all attributes?
     if (!utils.contains_keys(req.body, NEW_BOAT_ATTRIBUTES)) {
         res.status(400).send({"Error": "Missing required resource attributes"});
+        return;
+    }
+
+    // all boat attributes are good?
+    if (!utils.validBoatData(req.body)) {
+        res.status(400).send({"Error": "The provided attribute(s) do not conform to the boat data model, either data types or data length."})
         return;
     }
 
